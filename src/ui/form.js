@@ -299,7 +299,8 @@ export function updatePreviewStyles(currentState) {
 	posterContainer.style.backgroundColor = activeTheme.bg || activeTheme.background;
 
 	const parent = posterScaler.parentElement;
-	const padding = 120;
+	const isMobile = window.innerWidth < 768;
+	const padding = isMobile ? 40 : 120;
 	const availableW = parent.clientWidth - padding;
 	const availableH = parent.clientHeight - padding;
 
@@ -320,17 +321,19 @@ export function updatePreviewStyles(currentState) {
 			overlay.style.display = 'none';
 		} else {
 			overlay.style.display = '';
-			let pad = 48;
-			let citySize = 64;
-			let coordsSize = 16;
+			const isMobile = window.innerWidth < 768;
+			let pad = isMobile ? 24 : 48;
+			let citySize = isMobile ? 32 : 64;
+			let coordsSize = isMobile ? 10 : 16;
+
 			if (size === 'small') {
-				pad = 24;
-				citySize = 40;
-				coordsSize = 12;
+				pad = isMobile ? 12 : 24;
+				citySize = isMobile ? 24 : 40;
+				coordsSize = isMobile ? 8 : 12;
 			} else if (size === 'large') {
-				pad = 80;
-				citySize = 96;
-				coordsSize = 20;
+				pad = isMobile ? 40 : 80;
+				citySize = isMobile ? 48 : 96;
+				coordsSize = isMobile ? 14 : 20;
 			}
 			overlay.style.padding = `${pad}px`;
 			displayCity.style.fontSize = `${citySize}px`;

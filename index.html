@@ -23,14 +23,32 @@
 		body.loaded {
 			opacity: 1;
 		}
+
+		@media (max-width: 768px) {
+			.sidebar-open aside {
+				transform: translateX(0);
+			}
+			.sidebar-open .sidebar-overlay {
+				opacity: 1;
+				pointer-events: auto;
+			}
+		}
 	</style>
 </head>
 
 <body class="bg-[#f8fafc] h-screen flex flex-col md:flex-row overflow-hidden">
 
-	<aside class="w-full md:w-[380px] h-full bg-white border-r border-slate-100 flex flex-col z-50 shadow-2xl overflow-hidden">
-		<div class="p-8 pb-6">
-			<div class="flex items-center space-x-3 mb-1">
+	<button id="mobile-toggle" class="md:hidden fixed bottom-8 right-4 z-[60] w-14 h-14 bg-slate-900 text-white rounded-2xl shadow-2xl flex items-center justify-center active:scale-95 transition-all">
+		<svg class="w-6 h-6 toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16m-7 6h7" />
+		</svg>
+	</button>
+
+	<div id="sidebar-overlay" class="sidebar-overlay fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 opacity-0 pointer-events-none transition-opacity md:hidden"></div>
+
+	<aside class="fixed md:relative inset-y-0 left-0 w-[85%] md:w-[380px] h-full bg-white border-r border-slate-100 flex flex-col z-50 shadow-2xl md:shadow-none -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out overflow-hidden">
+		<div class="p-8 pb-6 flex items-center justify-between">
+			<div class="flex items-center space-x-3">
 				<div class="w-10 h-10 bg-accent rounded-xl flex items-center justify-center shadow-lg shadow-accent">
 					<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -224,7 +242,7 @@
 		</div>
 	</aside>
 
-	<main class="flex-1 overflow-hidden flex items-center justify-center p-8 md:p-16 relative bg-[#f1f5f9] perspective-lg">
+	<main class="flex-1 overflow-hidden flex items-center justify-center p-4 md:p-16 relative bg-[#f1f5f9] perspective-lg">
 		<div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
 			<div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-accent-soft blur-[120px] rounded-full"></div>
 			<div class="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-accent-soft blur-[120px] rounded-full"></div>
