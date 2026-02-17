@@ -14,8 +14,9 @@ export function setupControls() {
 
 	const modeTile = document.getElementById('mode-tile');
 	const modeArtistic = document.getElementById('mode-artistic');
-	const tileSettings = document.getElementById('tile-settings');
-	const artisticSettings = document.getElementById('artistic-settings');
+	const standardThemeConfig = document.getElementById('standard-theme-config');
+	const artisticThemeConfig = document.getElementById('artistic-theme-config');
+	const labelsControl = document.getElementById('labels-control');
 
 	const themeSelect = document.getElementById('theme-select');
 	const artisticThemeSelect = document.getElementById('artistic-theme-select');
@@ -44,7 +45,9 @@ export function setupControls() {
 	const zoomControlContainer = zoomSlider.parentElement;
 
 	const labelsToggle = document.getElementById('show-labels-toggle');
-	const overlayToggle = document.getElementById('overlay-bg-toggle');
+	const overlayBgButtons = document.querySelectorAll('.overlay-bg-btn');
+	const overlaySizeButtons = document.querySelectorAll('.overlay-size-btn');
+	const overlaySizeGroup = document.getElementById('overlay-size-group');
 	const customW = document.getElementById('custom-w');
 	const customH = document.getElementById('custom-h');
 	const presetBtns = document.querySelectorAll('.preset-btn');
@@ -148,9 +151,20 @@ export function setupControls() {
 		});
 	}
 
-	if (overlayToggle) {
-		overlayToggle.addEventListener('change', (e) => {
-			updateState({ overlayBgEnabled: e.target.checked });
+	if (overlayBgButtons) {
+		overlayBgButtons.forEach(btn => {
+			btn.addEventListener('click', () => {
+				updateState({ overlayBgType: btn.dataset.bg });
+			});
+		});
+	}
+
+	if (overlaySizeGroup && overlaySizeButtons) {
+		overlaySizeButtons.forEach(btn => {
+			btn.addEventListener('click', (e) => {
+				const size = btn.dataset.size;
+				updateState({ overlaySize: size });
+			});
 		});
 	}
 
@@ -174,19 +188,15 @@ export function setupControls() {
 		if (currentState.renderMode === 'tile') {
 			modeTile.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm';
 			modeArtistic.className = 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-900';
-			Array.from(tileSettings.children).forEach(c => c.classList.remove('hidden'));
-			artisticSettings.classList.add('hidden');
+			if (standardThemeConfig) standardThemeConfig.classList.remove('hidden');
+			if (artisticThemeConfig) artisticThemeConfig.classList.add('hidden');
+			if (labelsControl) labelsControl.classList.remove('hidden');
 		} else {
 			modeTile.className = 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-900';
 			modeArtistic.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-sm';
-			Array.from(tileSettings.children).forEach(c => {
-				if (c.contains(zoomSlider) || c === zoomControlContainer) {
-					c.classList.remove('hidden');
-				} else {
-					c.classList.add('hidden');
-				}
-			});
-			artisticSettings.classList.remove('hidden');
+			if (standardThemeConfig) standardThemeConfig.classList.add('hidden');
+			if (artisticThemeConfig) artisticThemeConfig.classList.remove('hidden');
+			if (labelsControl) labelsControl.classList.add('hidden');
 		}
 
 		themeSelect.value = currentState.theme;
@@ -196,7 +206,30 @@ export function setupControls() {
 		artisticDesc.textContent = artisticTheme.description;
 
 		if (labelsToggle) labelsToggle.checked = !!currentState.showLabels;
-		if (overlayToggle) overlayToggle.checked = !!currentState.overlayBgEnabled;
+		if (overlayBgButtons && overlayBgButtons.length) {
+			overlayBgButtons.forEach(b => {
+				const style = b.dataset.bg;
+				if (style === (currentState.overlayBgType || 'solid')) {
+					b.classList.add('bg-indigo-600', 'text-white');
+					b.classList.remove('bg-slate-50');
+				} else {
+					b.classList.remove('bg-indigo-600', 'text-white');
+					b.classList.add('bg-slate-50');
+				}
+			});
+		}
+		if (overlaySizeButtons && overlaySizeButtons.length) {
+			overlaySizeButtons.forEach(b => {
+				const s = b.dataset.size;
+				if (s === (currentState.overlaySize || 'medium')) {
+					b.classList.add('bg-indigo-600', 'text-white');
+					b.classList.remove('bg-slate-50');
+				} else {
+					b.classList.remove('bg-indigo-600', 'text-white');
+					b.classList.add('bg-slate-50');
+				}
+			});
+		}
 		customW.value = currentState.width;
 		customH.value = currentState.height;
 	};
@@ -211,7 +244,8 @@ export function updatePreviewStyles(currentState) {
 	const displayCity = document.getElementById('display-city');
 	const displayCoords = document.getElementById('display-coords');
 	const overlay = document.getElementById('poster-overlay');
-	const overlayBg = overlay.querySelector('.overlay-bg');
+	const overlayBg = overlay ? overlay.querySelector('.overlay-bg') : null;
+	const vignetteOverlay = document.getElementById('vignette-overlay');
 	const divider = document.getElementById('poster-divider');
 
 	const theme = getSelectedTheme();
@@ -258,13 +292,55 @@ export function updatePreviewStyles(currentState) {
 	displayCoords.textContent = formatCoords(currentState.lat, currentState.lon);
 	displayCoords.style.color = activeTheme.text || activeTheme.textColor;
 
-	if (overlayBg) {
-		if (currentState.overlayBgEnabled) {
-			overlayBg.style.display = '';
-			overlayBg.style.backgroundColor = activeTheme.overlayBg || activeTheme.background || activeTheme.bg;
-			overlayBg.style.opacity = isArtistic ? '0.7' : '0.9';
+	if (overlay) {
+		const size = currentState.overlaySize || 'medium';
+		if (size === 'none') {
+			overlay.style.display = 'none';
 		} else {
-			overlayBg.style.display = 'none';
+			overlay.style.display = '';
+			let pad = 48;
+			let citySize = 64;
+			let coordsSize = 16;
+			if (size === 'small') {
+				pad = 24;
+				citySize = 40;
+				coordsSize = 12;
+			} else if (size === 'large') {
+				pad = 80;
+				citySize = 96;
+				coordsSize = 20;
+			}
+			overlay.style.padding = `${pad}px`;
+			displayCity.style.fontSize = `${citySize}px`;
+			displayCoords.style.fontSize = `${coordsSize}px`;
+
+			const bgType = currentState.overlayBgType || 'solid';
+			const color = activeTheme.overlayBg || activeTheme.background || activeTheme.bg;
+
+			if (overlayBg) {
+				if (bgType === 'solid') {
+					overlayBg.style.display = '';
+					overlayBg.style.backgroundColor = color;
+					overlayBg.style.opacity = activeTheme.overlayBg ? '1' : (isArtistic ? '0.75' : '0.9');
+					overlayBg.style.background = '';
+					overlayBg.style.backdropFilter = 'blur(16px)';
+					overlayBg.style.webkitBackdropFilter = 'blur(16px)';
+				} else {
+					overlayBg.style.display = 'none';
+					overlayBg.style.backdropFilter = '';
+					overlayBg.style.webkitBackdropFilter = '';
+				}
+			}
+
+			if (vignetteOverlay) {
+				if (bgType === 'vignette') {
+					vignetteOverlay.style.display = '';
+					vignetteOverlay.style.opacity = '1';
+					vignetteOverlay.style.background = `linear-gradient(to bottom, ${color} 0%, ${color} 3%, transparent 20%, transparent 80%, ${color} 97%, ${color} 100%)`;
+				} else {
+					vignetteOverlay.style.display = 'none';
+				}
+			}
 		}
 	}
 	if (divider) divider.style.backgroundColor = activeTheme.text || activeTheme.textColor;

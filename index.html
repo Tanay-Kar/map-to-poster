@@ -79,7 +79,7 @@
 
 			<div class="space-y-4">
 				<div class="flex items-center justify-between">
-					<h3 class="text-sm font-semibold text-slate-900">2. Artistic Style</h3>
+					<h3 class="text-sm font-semibold text-slate-900">2. Map Style</h3>
 					<span class="w-5 h-5 bg-slate-100 rounded-md flex items-center justify-center text-[10px] font-bold text-slate-400">02</span>
 				</div>
 
@@ -89,15 +89,7 @@
 						<button id="mode-artistic" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all">Artistic</button>
 					</div>
 
-					<div id="tile-settings" class="space-y-4">
-						<div>
-							<div class="flex justify-between items-center mb-2">
-								<span class="label-sm mb-0">Perspective Zoom</span>
-								<span id="zoom-value" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">12</span>
-							</div>
-							<input type="range" id="zoom-slider" min="1" max="18" step="1" class="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" />
-						</div>
-
+					<div id="standard-theme-config" class="space-y-4">
 						<div>
 							<span class="label-sm">Color Theme</span>
 							<div class="relative">
@@ -107,21 +99,17 @@
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
 								</svg>
 							</div>
+						</div>
 
-							<div class="mt-3 space-y-2">
-								<label class="flex items-center space-x-2 cursor-pointer">
-									<input type="checkbox" id="show-labels-toggle" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" checked />
-									<span class="label-sm mb-0 normal-case font-semibold text-slate-600">Show Place Labels</span>
-								</label>
-								<label class="flex items-center space-x-2 cursor-pointer">
-									<input type="checkbox" id="overlay-bg-toggle" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" checked />
-									<span class="label-sm mb-0 normal-case font-semibold text-slate-600">Overlay Background</span>
-								</label>
-							</div>
+						<div id="labels-control">
+							<label class="flex items-center space-x-2 cursor-pointer">
+								<input type="checkbox" id="show-labels-toggle" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" checked />
+								<span class="label-sm mb-0 normal-case font-semibold text-slate-600">Show Place Labels</span>
+							</label>
 						</div>
 					</div>
 
-					<div id="artistic-settings" class="space-y-4 hidden">
+					<div id="artistic-theme-config" class="space-y-4 hidden">
 						<div>
 							<span class="label-sm">Artistic Theme</span>
 							<div class="relative">
@@ -139,8 +127,46 @@
 
 			<div class="space-y-4">
 				<div class="flex items-center justify-between">
-					<h3 class="text-sm font-semibold text-slate-900">3. Output Format</h3>
+					<h3 class="text-sm font-semibold text-slate-900">3. Composition</h3>
 					<span class="w-5 h-5 bg-slate-100 rounded-md flex items-center justify-center text-[10px] font-bold text-slate-400">03</span>
+				</div>
+
+				<div class="space-y-4">
+					<div>
+						<div class="flex justify-between items-center mb-2">
+							<span class="label-sm mb-0">Perspective Zoom</span>
+							<span id="zoom-value" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">12</span>
+						</div>
+						<input type="range" id="zoom-slider" min="1" max="18" step="1" class="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600" />
+					</div>
+
+					<div id="overlay-controls" class="mt-4 space-y-4">
+						<div>
+							<span class="label-sm">Overlay Size</span>
+							<div id="overlay-size-group" class="grid grid-cols-4 gap-2 w-full mt-1">
+								<button type="button" data-size="none" class="overlay-size-btn px-3 py-2 text-[10px] font-bold rounded-lg bg-slate-50 border border-slate-100">None</button>
+								<button type="button" data-size="small" class="overlay-size-btn px-3 py-2 text-[10px] font-bold rounded-lg bg-slate-50 border border-slate-100">Small</button>
+								<button type="button" data-size="medium" class="overlay-size-btn px-3 py-2 text-[10px] font-bold rounded-lg bg-slate-50 border border-slate-100">Medium</button>
+								<button type="button" data-size="large" class="overlay-size-btn px-3 py-2 text-[10px] font-bold rounded-lg bg-slate-50 border border-slate-100">Large</button>
+							</div>
+						</div>
+						
+						<div>
+							<span class="label-sm">Background Style</span>
+							<div id="overlay-bg-group" class="grid grid-cols-3 gap-2 w-full mt-1">
+								<button type="button" data-bg="none" class="overlay-bg-btn px-3 py-2 text-[10px] font-bold rounded-lg bg-slate-50 border border-slate-100">None</button>
+								<button type="button" data-bg="solid" class="overlay-bg-btn px-3 py-2 text-[10px] font-bold rounded-lg bg-slate-50 border border-slate-100">Solid</button>
+								<button type="button" data-bg="vignette" class="overlay-bg-btn px-3 py-2 text-[10px] font-bold rounded-lg bg-slate-50 border border-slate-100">Vignette</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="space-y-4">
+				<div class="flex items-center justify-between">
+					<h3 class="text-sm font-semibold text-slate-900">4. Output Format</h3>
+					<span class="w-5 h-5 bg-slate-100 rounded-md flex items-center justify-center text-[10px] font-bold text-slate-400">04</span>
 				</div>
 
 				<div class="space-y-4">
@@ -202,9 +228,10 @@
 			<div id="poster-container" class="relative bg-white shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] ring-1 ring-black/5 overflow-hidden">
 				<div id="map-preview" class="absolute inset-0 z-0 grayscale-[0.2]"></div>
 				<div id="artistic-map" class="absolute inset-0 z-[1]"></div>
+				<div id="vignette-overlay" class="absolute inset-0 z-[5] pointer-events-none"></div>
 
 				<div id="poster-overlay" class="absolute bottom-0 left-0 right-0 p-12 md:p-20 z-10 flex flex-col items-center justify-center text-center pointer-events-none">
-					<div class="overlay-bg absolute inset-0 opacity-90 backdrop-blur-md -z-10 bg-white"></div>
+					<div class="overlay-bg absolute inset-0 -z-10"></div>
 
 					<h2 id="display-city" class="text-6xl md:text-8xl font-bold uppercase tracking-[0.25em] pl-[0.25em] text-slate-900 mb-6 font-serif break-words w-full leading-tight">JAKARTA</h2>
 
