@@ -7,6 +7,7 @@ import { searchLocation, formatCoords } from '../map/geocoder.js';
 export function setupControls() {
 	const searchInput = document.getElementById('search-input');
 	const searchResults = document.getElementById('search-results');
+	const searchLoading = document.getElementById('search-loading');
 	const latInput = document.getElementById('lat-input');
 	const lonInput = document.getElementById('lon-input');
 	const zoomSlider = document.getElementById('zoom-slider');
@@ -63,7 +64,10 @@ export function setupControls() {
 		}
 
 		searchTimeout = setTimeout(async () => {
+			if (searchLoading) searchLoading.classList.remove('hidden');
 			const results = await searchLocation(query);
+			if (searchLoading) searchLoading.classList.add('hidden');
+
 			if (results.length > 0) {
 				searchResults.innerHTML = results.map(r => `
           <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm" data-lat="${r.lat}" data-lon="${r.lon}" data-name="${r.shortName}">
