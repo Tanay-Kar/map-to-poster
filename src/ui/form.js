@@ -3,7 +3,13 @@ import { hexToRgba } from '../core/utils.js';
 import { artisticThemes } from '../core/artistic-themes.js';
 import { themes } from '../core/themes.js';
 import { outputPresets } from '../core/output-presets.js';
-import { updateMapPosition, invalidateMapSize, updateArtisticStyle, updateMapTheme } from '../map/map-init.js';
+import {
+	updateMapPosition,
+	invalidateMapSize,
+	updateArtisticStyle,
+	updateMapTheme,
+	updateMarkerStyles
+} from '../map/map-init.js';
 import { searchLocation, formatCoords } from '../map/geocoder.js';
 
 
@@ -48,6 +54,12 @@ export function setupControls() {
 	}
 
 	const labelsToggle = document.getElementById('show-labels-toggle');
+	const markerToggle = document.getElementById('show-marker-toggle');
+	const markerSettings = document.getElementById('marker-settings');
+	const markerIconSelect = document.getElementById('marker-icon-select');
+	const markerSizeSlider = document.getElementById('marker-size-slider');
+	const markerSizeValue = document.getElementById('marker-size-value');
+
 	const overlayBgButtons = document.querySelectorAll('.overlay-bg-btn');
 	const overlaySizeButtons = document.querySelectorAll('.overlay-size-btn');
 	const overlaySizeGroup = document.getElementById('overlay-size-group');
@@ -94,6 +106,22 @@ export function setupControls() {
 	if (matBorderOpacitySlider) {
 		matBorderOpacitySlider.addEventListener('input', (e) => {
 			updateState({ matBorderOpacity: parseFloat(e.target.value) });
+		});
+	}
+
+	if (markerIconSelect) {
+		markerIconSelect.addEventListener('change', (e) => {
+			updateState({ markerIcon: e.target.value });
+			updateMarkerStyles(state);
+		});
+	}
+
+	if (markerSizeSlider) {
+		markerSizeSlider.addEventListener('input', (e) => {
+			const size = parseInt(e.target.value);
+			updateState({ markerSize: size / 40.0 });
+			updateMarkerStyles(state);
+			if (markerSizeValue) markerSizeValue.textContent = `${size}px`;
 		});
 	}
 
@@ -234,7 +262,7 @@ export function setupControls() {
 		if (!cityOverrideInput || !cityOverrideInput.value.trim()) {
 			updateState({ city: name.toUpperCase() });
 		}
-		updateState({ lat, lon });
+		updateState({ lat, lon, markerLat: lat, markerLon: lon });
 		updateMapPosition(lat, lon);
 
 		searchInput.value = name;
@@ -258,13 +286,13 @@ export function setupControls() {
 
 	latInput.addEventListener('change', (e) => {
 		const lat = parseFloat(e.target.value);
-		updateState({ lat });
+		updateState({ lat, markerLat: lat });
 		updateMapPosition(lat, state.lon);
 	});
 
 	lonInput.addEventListener('change', (e) => {
 		const lon = parseFloat(e.target.value);
-		updateState({ lon });
+		updateState({ lon, markerLon: lon });
 		updateMapPosition(state.lat, lon);
 	});
 
@@ -341,6 +369,16 @@ export function setupControls() {
 	if (labelsToggle) {
 		labelsToggle.addEventListener('change', (e) => {
 			updateState({ showLabels: e.target.checked });
+		});
+	}
+
+	if (markerToggle) {
+		markerToggle.addEventListener('change', (e) => {
+			const show = e.target.checked;
+			updateState({ showMarker: show });
+			updateMarkerStyles(state);
+			const settings = document.getElementById('marker-settings');
+			if (settings) settings.classList.toggle('hidden', !show);
 		});
 	}
 
@@ -462,8 +500,22 @@ export function setupControls() {
 			});
 		}
 
-		customW.value = currentState.width;
-		customH.value = currentState.height;
+		if (customW) customW.value = currentState.width;
+		if (customH) customH.value = currentState.height;
+
+		if (labelsToggle) labelsToggle.checked = !!currentState.showLabels;
+		if (markerToggle) markerToggle.checked = !!currentState.showMarker;
+		if (markerSettings) {
+			if (currentState.showMarker) markerSettings.classList.remove('hidden');
+			else markerSettings.classList.add('hidden');
+		}
+
+		if (markerIconSelect) markerIconSelect.value = currentState.markerIcon || 'pin';
+		if (markerSizeSlider) {
+			const sizePx = Math.round((currentState.markerSize || 1) * 40);
+			markerSizeSlider.value = sizePx;
+			if (markerSizeValue) markerSizeValue.textContent = `${sizePx}px`;
+		}
 
 		if (matToggle) matToggle.checked = !!currentState.matEnabled;
 		if (matSettings) {
@@ -516,6 +568,7 @@ export function setupControls() {
 			exportBtn.classList.remove('bg-slate-900');
 			exportBtn.classList.add('bg-accent');
 		} else {
+			accentColor = '#0f172a';
 			exportBtn.classList.add('bg-slate-900');
 			exportBtn.classList.remove('bg-accent');
 		}
@@ -699,6 +752,8 @@ export function updatePreviewStyles(currentState) {
 		}
 	}
 	if (divider) divider.style.backgroundColor = activeTheme.text || activeTheme.textColor;
+
+	updateMarkerStyles(currentState);
 
 	if (sizeChanged || matChanged) {
 		setTimeout(() => {

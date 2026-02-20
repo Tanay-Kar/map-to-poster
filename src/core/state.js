@@ -25,6 +25,11 @@ export const defaultState = {
 	matShowBorder: true,
 	matBorderWidth: 1,
 	matBorderOpacity: 1,
+	showMarker: false,
+	markerLat: -6.2088,
+	markerLon: 106.8456,
+	markerIcon: 'pin',
+	markerSize: 1,
 };
 
 export const state = { ...defaultState };
@@ -47,7 +52,12 @@ const SAVED_KEYS = [
 	'matWidth',
 	'matShowBorder',
 	'matBorderWidth',
-	'matBorderOpacity'
+	'matBorderOpacity',
+	'showMarker',
+	'markerLat',
+	'markerLon',
+	'markerIcon',
+	'markerSize'
 ];
 
 function loadSettings() {

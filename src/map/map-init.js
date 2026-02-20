@@ -1,15 +1,45 @@
 import L from 'leaflet';
 import maplibregl from 'maplibre-gl';
-import { updateState } from '../core/state.js';
+import { updateState, getSelectedTheme, getSelectedArtisticTheme } from '../core/state.js';
 
 let map = null;
 let tileLayer = null;
+let marker = null;
 let artisticMap = null;
+let artisticMarker = null;
 let currentArtisticThemeName = null;
 let isSyncing = false;
 let styleChangeInProgress = false;
 let pendingArtisticStyle = null;
 let pendingArtisticThemeName = null;
+
+const MARKER_ICONS = {
+	pin: `
+		<svg class="marker-pin" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+			<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+		</svg>
+	`,
+	circle: `
+		<svg class="marker-pin" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+			<path fill-rule="evenodd" clip-rule="evenodd" d="M12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4ZM12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9Z" />
+		</svg>
+	`,
+	heart: `
+		<svg class="marker-pin" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+			<path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+		</svg>
+	`,
+	star: `
+		<svg class="marker-pin" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+			<path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+		</svg>
+	`,
+	none: `
+		<svg class="marker-pin" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+			<circle cx="12" cy="12" r="2" />
+		</svg>
+	`
+};
 
 export function initMap(containerId, initialCenter, initialZoom, initialTileUrl) {
 	map = L.map(containerId, {
@@ -23,6 +53,24 @@ export function initMap(containerId, initialCenter, initialZoom, initialTileUrl)
 		maxZoom: 19,
 		crossOrigin: true,
 	}).addTo(map);
+
+	const customIcon = L.divIcon({
+		className: 'custom-marker',
+		html: MARKER_ICONS.pin,
+		iconSize: [40, 40],
+		iconAnchor: [20, 20]
+	});
+	marker = L.marker(initialCenter, {
+		icon: customIcon,
+		draggable: true,
+		autoPan: true
+	});
+
+	marker.on('dragend', () => {
+		const pos = marker.getLatLng();
+		updateState({ markerLat: pos.lat, markerLon: pos.lng });
+		if (artisticMarker) artisticMarker.setLngLat([pos.lng, pos.lat]);
+	});
 
 	map.on('moveend', () => {
 		if (isSyncing) return;
@@ -96,6 +144,66 @@ function initArtisticMap(containerId, center, zoom) {
 
 		isSyncing = false;
 	});
+
+	const el = document.createElement('div');
+	el.className = 'custom-marker';
+	el.innerHTML = MARKER_ICONS.pin;
+	artisticMarker = new maplibregl.Marker({ element: el, draggable: true })
+		.setLngLat(center);
+
+	artisticMarker.on('dragend', () => {
+		const pos = artisticMarker.getLngLat();
+		updateState({ markerLat: pos.lat, markerLon: pos.lng });
+		if (marker) marker.setLatLng([pos.lat, pos.lng]);
+	});
+}
+
+function getIconAnchor(iconName, size) {
+	if (iconName === 'pin') return [size / 2, size];
+	return [size / 2, size / 2];
+}
+
+export function updateMarkerIcon(iconName, size) {
+	const html = MARKER_ICONS[iconName] || MARKER_ICONS.pin;
+	const anchor = getIconAnchor(iconName, size);
+
+	if (marker) {
+		const newIcon = L.divIcon({
+			className: 'custom-marker',
+			html: html,
+			iconSize: [size, size],
+			iconAnchor: anchor
+		});
+		marker.setIcon(newIcon);
+	}
+
+	if (artisticMarker) {
+		const el = artisticMarker.getElement();
+		el.innerHTML = html;
+		el.style.width = `${size}px`;
+		el.style.height = `${size}px`;
+
+	}
+}
+
+export function updateMarkerSize(size, iconName) {
+	updateMarkerIcon(iconName, size);
+}
+
+export function updateMarkerVisibility(show) {
+	if (marker) {
+		if (show) marker.addTo(map);
+		else marker.remove();
+	}
+	if (artisticMarker) {
+		if (show) artisticMarker.addTo(artisticMap);
+		else artisticMarker.remove();
+	}
+}
+
+export function updateMarkerPosition(lat, lon) {
+	if (marker) marker.setLatLng([lat, lon]);
+	if (artisticMarker) artisticMarker.setLngLat([lon, lat]);
 }
 
 export function updateArtisticStyle(theme) {
@@ -294,5 +402,65 @@ export function invalidateMapSize() {
 	}
 	if (artisticMap) {
 		artisticMap.resize();
+	}
+}
+
+export function updateMarkerStyles(state) {
+	const iconType = state.markerIcon || 'pin';
+	const baseSize = 40;
+	const size = Math.round(baseSize * (state.markerSize || 1));
+
+	const isArtistic = state.renderMode === 'artistic';
+	const theme = isArtistic ? getSelectedArtisticTheme() : getSelectedTheme();
+	const color = isArtistic ? (theme.road_primary || theme.text || '#0f172a') : (theme.textColor || '#0f172a');
+
+	const html = (MARKER_ICONS[iconType] || MARKER_ICONS.pin)
+		.replace('class="marker-pin"', `style="width: ${size}px; height: ${size}px; color: ${color};"`);
+
+	const anchorX = size / 2;
+	const anchorY = iconType === 'pin' ? size : size / 2;
+
+	if (marker) {
+		if (state.showMarker) {
+			const icon = L.divIcon({
+				className: 'custom-marker',
+				html: html,
+				iconSize: [size, size],
+				iconAnchor: [anchorX, anchorY]
+			});
+			marker.setIcon(icon);
+			marker.setLatLng([state.markerLat, state.markerLon]);
+			if (!map.hasLayer(marker)) marker.addTo(map);
+		} else {
+			if (map.hasLayer(marker)) map.removeLayer(marker);
+		}
+	}
+
+	if (artisticMap) {
+		if (artisticMarker) {
+			artisticMarker.remove();
+		}
+
+		if (state.showMarker) {
+			const el = document.createElement('div');
+			el.className = 'custom-marker';
+			el.innerHTML = html;
+			el.style.width = `${size}px`;
+			el.style.height = `${size}px`;
+
+			artisticMarker = new maplibregl.Marker({
+				element: el,
+				draggable: true,
+				anchor: iconType === 'pin' ? 'bottom' : 'center'
+			})
+				.setLngLat([state.markerLon, state.markerLat])
+				.addTo(artisticMap);
+
+			artisticMarker.on('dragend', () => {
+				const pos = artisticMarker.getLngLat();
+				updateState({ markerLat: pos.lat, markerLon: pos.lng });
+				if (marker) marker.setLatLng([pos.lat, pos.lng]);
+			});
+		}
 	}
 }

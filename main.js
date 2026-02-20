@@ -1,6 +1,6 @@
 import './style.css';
 import { subscribe, state, getSelectedTheme } from './src/core/state.js';
-import { initMap, updateMapTheme, invalidateMapSize, waitForTilesLoad, waitForArtisticIdle } from './src/map/map-init.js';
+import { initMap, updateMapTheme, invalidateMapSize, waitForTilesLoad, waitForArtisticIdle, updateMarkerVisibility, updateMarkerPosition } from './src/map/map-init.js';
 import { setupControls, updatePreviewStyles } from './src/ui/form.js';
 import { exportToPNG } from './src/core/export.js';
 
@@ -64,6 +64,9 @@ subscribe((currentState) => {
 
 	updatePreviewStyles(currentState);
 	updateMobileToggleColor(currentState);
+
+	updateMarkerVisibility(currentState.showMarker);
+	updateMarkerPosition(currentState.markerLat, currentState.markerLon);
 
 	syncUI(currentState);
 	ensurePreviewReady();

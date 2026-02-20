@@ -3,6 +3,33 @@ import { getMapInstance, getArtisticMapInstance } from '../map/map-init.js';
 import { state, getSelectedTheme, getSelectedArtisticTheme } from './state.js';
 import { hexToRgba } from './utils.js';
 
+const MARKER_ICONS_EXPORT = {
+	pin: `<svg width="100" height="100" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+			<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+		</svg>`,
+	circle: `<svg width="100" height="100" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+			<path fill-rule="evenodd" clip-rule="evenodd" d="M12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4ZM12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9Z" />
+		</svg>`,
+	heart: `<svg width="100" height="100" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+			<path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+		</svg>`,
+	star: `<svg width="100" height="100" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+			<path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+		</svg>`,
+	none: `<svg width="100" height="100" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+			<circle cx="12" cy="12" r="2" />
+		</svg>`
+};
+
+function project(lat, lon, scale) {
+	const siny = Math.sin(lat * Math.PI / 180);
+	const y = 0.5 - Math.log((1 + siny) / (1 - siny)) / (4 * Math.PI);
+	return {
+		x: (lon + 180) / 360 * scale,
+		y: y * scale
+	};
+}
+
 async function captureMapSnapshot() {
 	const artisticContainer = document.getElementById('artistic-map');
 	const mapPreviewContainer = document.getElementById('map-preview');
@@ -42,6 +69,23 @@ async function captureMapSnapshot() {
 
 				const mapCanvas = artisticMap.getCanvas();
 				ctx.drawImage(mapCanvas, 0, 0, canvas.width, canvas.height);
+
+				if (state.showMarker) {
+					const zoom = artisticMap.getZoom();
+					const center = artisticMap.getCenter();
+					const scale = Math.pow(2, zoom) * 512;
+					const centerPoint = project(center.lat, center.lng, scale);
+					const markerPoint = project(state.markerLat, state.markerLon, scale);
+
+					const x = (canvas.width / 2) + (markerPoint.x - centerPoint.x);
+					const y = (canvas.height / 2) + (markerPoint.y - centerPoint.y);
+
+					const theme = getSelectedArtisticTheme();
+					const color = theme.road_primary || theme.text || '#0f172a';
+
+					await drawMarkerToCtx(ctx, x, y, color);
+				}
+
 				const data = canvas.toDataURL('image/png');
 
 				artisticContainer.style.width = originalWidth;
@@ -74,12 +118,55 @@ async function captureMapSnapshot() {
 				}
 			});
 
+			if (state.showMarker) {
+				const map = getMapInstance();
+				const zoom = map.getZoom();
+				const center = map.getCenter();
+				const scaleMap = Math.pow(2, zoom) * 256;
+				const centerPoint = project(center.lat, center.lng, scaleMap);
+				const markerPoint = project(state.markerLat, state.markerLon, scaleMap);
+
+				const x = (canvas.width / 2) + (markerPoint.x - centerPoint.x);
+				const y = (canvas.height / 2) + (markerPoint.y - centerPoint.y);
+
+				const theme = getSelectedTheme();
+				const color = theme.text || theme.textColor || '#0f172a';
+
+				await drawMarkerToCtx(ctx, x, y, color);
+			}
+
 			return canvas.toDataURL('image/png');
 		} catch (e) {
 			console.error('Gagal capture Leaflet Map:', e);
 		}
 	}
 	return null;
+}
+
+async function drawMarkerToCtx(ctx, x, y, color) {
+	const { state } = await import('./state.js');
+	const iconType = state.markerIcon || 'pin';
+	const baseSize = 40;
+	const size = Math.round(baseSize * (state.markerSize || 1));
+	const svgString = MARKER_ICONS_EXPORT[iconType] || MARKER_ICONS_EXPORT.pin;
+	const svg = svgString
+		.replace('currentColor', color)
+		.replace('width="100"', `width="${size}"`)
+		.replace('height="100"', `height="${size}"`);
+
+	return new Promise((resolve) => {
+		const img = new Image();
+		const url = 'data:image/svg+xml;base64,' + btoa(svg);
+
+		img.onload = () => {
+			const anchorX = size / 2;
+			const anchorY = iconType === 'pin' ? size : size / 2;
+			ctx.drawImage(img, x - anchorX, y - anchorY, size, size);
+			resolve();
+		};
+		img.onerror = () => resolve();
+		img.src = url;
+	});
 }
 
 export async function exportToPNG(element, filename, statusElement, options = {}) {

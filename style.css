@@ -107,6 +107,14 @@
 	::-webkit-scrollbar-thumb {
 		@apply bg-slate-200 rounded-full hover:bg-slate-300;
 	}
+
+	.custom-marker {
+		@apply flex items-center justify-center;
+	}
+
+	.marker-pin {
+		@apply w-10 h-10 text-accent filter drop-shadow-lg;
+	}
 }
 
 .leaflet-container {

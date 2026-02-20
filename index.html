@@ -192,6 +192,42 @@
 								<button type="button" data-bg="vignette" class="overlay-bg-btn px-3 py-2 text-[10px] font-bold rounded-lg bg-slate-50 border border-slate-100">Vignette</button>
 							</div>
 						</div>
+
+						<div class="flex items-center justify-between pt-2 border-t border-slate-50">
+							<span class="label-sm mb-0">Show Location Marker</span>
+							<label class="relative inline-flex items-center cursor-pointer">
+								<input type="checkbox" id="show-marker-toggle" class="sr-only peer">
+								<div class="toggle-pill"></div>
+							</label>
+						</div>
+
+						<div id="marker-settings" class="space-y-4 hidden pt-2">
+							<div class="grid grid-cols-2 gap-3">
+								<div>
+									<span class="label-sm">Marker Symbol</span>
+									<div class="relative">
+										<select id="marker-icon-select" class="input-field appearance-none cursor-pointer text-xs py-2">
+											<option value="pin">Default Pin</option>
+											<option value="circle">Modern Dot</option>
+											<option value="heart">Heart</option>
+											<option value="star">Star</option>
+											<option value="none">Ghost Point</option>
+										</select>
+										<svg class="w-3 h-3 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+										</svg>
+									</div>
+								</div>
+								<div>
+									<div class="flex justify-between items-center mb-1.5">
+										<span class="label-sm mb-0">Size</span>
+										<span id="marker-size-value" class="text-[9px] font-bold text-accent">40px</span>
+									</div>
+									<input type="range" id="marker-size-slider" min="10" max="120" step="2" value="40" class="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-accent" />
+								</div>
+							</div>
+							<p class="text-[9px] text-slate-400 italic text-center">Tip: You can drag the marker on the map to reposition it.</p>
+						</div>
 					</div>
 				</div>
 			</div>
